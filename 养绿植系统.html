@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 班级/家庭积分养绿植系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body { font-family: 'PingFang SC', system-ui, sans-serif; }
+        .plant-stage { transition: all 0.4s ease; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen">
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- 标题栏 -->
+        <div class="bg-white rounded-3xl shadow-xl p-6 mb-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-3xl">🌱</div>
+                <div>
+                    <h1 class="text-3xl font-bold text-emerald-700">班级/家庭积分养绿植系统</h1>
+                    <p class="text-emerald-600 text-sm">环保游戏化管理 · 3周见效</p>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="addStudent()" 
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-medium">
+                    <i class="fas fa-plus"></i> 添加学生/孩子
+                </button>
+                <button onclick="showRules()" 
+                        class="bg-white border border-emerald-600 text-emerald-700 px-6 py-3 rounded-2xl flex items-center gap-2 font-medium">
+                    <i class="fas fa-book"></i> 规则说明
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-3xl p-6 shadow text-center">
+                <p class="text-emerald-600 text-sm">总学生/孩子</p>
+                <p id="totalStudents" class="text-5xl font-bold text-emerald-700">0</p>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow text-center">
+                <p class="text-emerald-600 text-sm">今日总积分</p>
+                <p id="todayPoints" class="text-5xl font-bold text-emerald-700">0</p>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow text-center">
+                <p class="text-emerald-600 text-sm">已成长绿植</p>
+                <p id="maturePlants" class="text-5xl font-bold text-emerald-700">0</p>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow text-center relative">
+                <p class="text-emerald-600 text-sm">全班/全家绿植墙</p>
+                <div id="wallPreview" class="flex justify-center gap-2 mt-2 text-4xl"></div>
+            </div>
+        </div>
+
+        <!-- 学生列表 -->
+        <h2 class="text-2xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-users"></i> 我的学生/孩子列表
+        </h2>
+        <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <!-- 奖励积分弹窗 -->
+    <div id="rewardModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-lg mx-4">
+            <h3 class="text-2xl font-bold mb-6">给 <span id="modalStudentName" class="text-emerald-600"></span> 奖励积分</h3>
+            <div class="space-y-3">
+                <button onclick="givePoints(5)" class="w-full text-left px-6 py-4 bg-green-50 hover:bg-green-100 rounded-2xl flex justify-between items-center">
+                    <span>作业优秀 / 课堂积极</span><span class="text-emerald-600 font-bold">+5 分</span>
+                </button>
+                <button onclick="givePoints(8)" class="w-full text-left px-6 py-4 bg-green-50 hover:bg-green-100 rounded-2xl flex justify-between items-center">
+                    <span>劳动环保 / 帮家长做事</span><span class="text-emerald-600 font-bold">+8 分</span>
+                </button>
+                <button onclick="givePoints(10)" class="w-full text-left px-6 py-4 bg-green-50 hover:bg-green-100 rounded-2xl flex justify-between items-center">
+                    <span>团队合作 / 小组第一</span><span class="text-emerald-600 font-bold">+10 分</span>
+                </button>
+                <button onclick="givePoints(3)" class="w-full text-left px-6 py-4 bg-green-50 hover:bg-green-100 rounded-2xl flex justify-between items-center">
+                    <span>按时完成任务 / 守纪律</span><span class="text-emerald-600 font-bold">+3 分</span>
+                </button>
+                <div class="flex gap-3 mt-6">
+                    <input id="customPoints" type="number" placeholder="自定义积分" 
+                           class="flex-1 px-6 py-4 border rounded-2xl focus:outline-none focus:border-emerald-500">
+                    <button onclick="giveCustomPoints()" 
+                            class="bg-emerald-600 text-white px-8 rounded-2xl">确认奖励</button>
+                </div>
+            </div>
+            <button onclick="hideModal()" class="mt-6 w-full text-emerald-600 py-3">关闭</button>
+        </div>
+    </div>
+
+    <!-- 规则说明弹窗 -->
+    <div id="rulesModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-auto">
+            <h3 class="text-2xl font-bold mb-6">🌱 系统规则</h3>
+            <div class="prose text-gray-700">
+                <p>1. 每做好一件事获得积分</p>
+                <p>2. 积分用来「浇水」「施肥」「繁殖」</p>
+                <p>3. 绿植成长阶段：<br>
+                   🌰 种子 → 🌱 发芽 → 🌿 小苗 → 🪴 成长 → 🌺 开花结果</p>
+                <p>4. 积分达到一定值自动升级，升级后可繁殖小多肉送给同学/家人</p>
+                <p class="text-emerald-600 font-medium">本系统数据保存在浏览器本地，刷新不丢失</p>
+            </div>
+            <button onclick="hideRules()" class="mt-8 w-full bg-emerald-600 text-white py-4 rounded-2xl">我知道了</button>
+        </div>
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem('greenPlantStudents')) || [];
+
+        const stages = [
+            { emoji: '🌰', name: '种子', points: 0 },
+            { emoji: '🌱', name: '发芽', points: 30 },
+            { emoji: '🌿', name: '小苗', points: 80 },
+            { emoji: '🪴', name: '成长', points: 150 },
+            { emoji: '🌺', name: '开花', points: 250 }
+        ];
+
+        function saveData() {
+            localStorage.setItem('greenPlantStudents', JSON.stringify(students));
+        }
+
+        function getStage(points) {
+            for (let i = stages.length - 1; i >= 0; i--) {
+                if (points >= stages[i].points) return stages[i];
+            }
+            return stages[0];
+        }
+
+        function renderStudents() {
+            const container = document.getElementById('studentList');
+            container.innerHTML = '';
+            
+            students.forEach((student, index) => {
+                const stage = getStage(student.points || 0);
+                const progress = Math.min(((student.points || 0) / stages[stages.length-1].points) * 100, 100);
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-emerald-800">${student.name}</h3>
+                            <p class="text-emerald-600">${student.points || 0} 积分</p>
+                        </div>
+                        <div class="text-6xl plant-stage">${stage.emoji}</div>
+                    </div>
+                    <div class="text-center text-sm text-emerald-600 mb-2">${stage.name} 阶段</div>
+                    <div class="h-2 bg-emerald-100 rounded-full overflow-hidden mb-4">
+                        <div class="h-2 bg-emerald-500 rounded-full" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="rewardStudent(${index})" 
+                                class="flex-1 bg-emerald-600 text-white py-3 rounded-2xl text-sm font-medium">奖励积分</button>
+                        <button onclick="deleteStudent(${index})" 
+                                class="flex-1 border border-red-300 text-red-500 py-3 rounded-2xl text-sm font-medium">删除</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // 更新统计
+            document.getElementById('totalStudents').textContent = students.length;
+            document.getElementById('todayPoints').textContent = students.reduce((sum, s) => sum + (s.points || 0), 0);
+            document.getElementById('maturePlants').textContent = students.filter(s => (s.points || 0) >= 150).length;
+
+            // 绿植墙预览
+            const wall = document.getElementById('wallPreview');
+            wall.innerHTML = students.map(s => {
+                const stage = getStage(s.points || 0);
+                return `<span class="text-4xl">${stage.emoji}</span>`;
+            }).join('');
+        }
+
+        function addStudent() {
+            const name = prompt('请输入学生/孩子姓名：', '小明');
+            if (name && name.trim()) {
+                students.push({ name: name.trim(), points: 0 });
+                saveData();
+                renderStudents();
+            }
+        }
+
+        function deleteStudent(index) {
+            if (confirm('确定删除这个学生/孩子吗？')) {
+                students.splice(index, 1);
+                saveData();
+                renderStudents();
+            }
+        }
+
+        let currentIndex = null;
+        function rewardStudent(index) {
+            currentIndex = index;
+            document.getElementById('modalStudentName').textContent = students[index].name;
+            document.getElementById('rewardModal').classList.remove('hidden');
+        }
+
+        function givePoints(points) {
+            if (currentIndex !== null) {
+                students[currentIndex].points = (students[currentIndex].points || 0) + points;
+                saveData();
+                hideModal();
+                renderStudents();
+            }
+        }
+
+        function giveCustomPoints() {
+            const input = document.getElementById('customPoints');
+            const points = parseInt(input.value);
+            if (points > 0 && currentIndex !== null) {
+                students[currentIndex].points = (students[currentIndex].points || 0) + points;
+                saveData();
+                hideModal();
+                renderStudents();
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('rewardModal').classList.add('hidden');
+            currentIndex = null;
+        }
+
+        function showRules() {
+            document.getElementById('rulesModal').classList.remove('hidden');
+        }
+
+        function hideRules() {
+            document.getElementById('rulesModal').classList.add('hidden');
+        }
+
+        // 初始化
+        window.onload = function() {
+            renderStudents();
+            
+            // Tailwind script
+            return () => {
+                // 自动初始化已完成
+            };
+        };
+    </script>
+</body>
+</html>
